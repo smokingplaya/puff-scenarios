@@ -1,0 +1,62 @@
+data:
+  projectName: Flexible Gmod RustLang DLL Builder
+  authors: ["smokingplaya"]
+
+configuration:
+  # ! powershell for windows
+  # possible values: powershell, cmd, bash, zsh, sh, fish, etc
+  shell: powershell
+  default: deploy
+
+# ! Configure this lines:
+variables:
+  # should be lowercase
+  PACKAGE_NAME: projectname
+  # possible values:
+  # i686-pc-windows-msvc      win32
+  # x86_64-pc-windows-msvc    win64
+  # i686-unknown-linux-gnu    linux (x32)
+  # x86_64-unknown-linux-gnu  linux64
+  BUILD_TARGET: "x86_64-pc-windows-msvc"
+  BUILD_PLATFORM: win64
+   # windows    ${PACKAGE_NAME}.dll (windows)
+   # unix*      lib${PACKAGE_NAME}.so
+  BUILDED_FILE_NAME: "${PACKAGE_NAME}.dll"
+
+  # sv    serverside / menu
+  # cl    client
+  PACKAGE_SIDE: sv
+
+  # server (srcds) information
+  SERVER_DIR: "C:/Program Files/gmodds"
+  SERVER_STARTER: "${SERVER_DIR}/ServerStart.ps1"
+
+tasks:
+  build:
+    description: Builds project in a dll
+    commands:
+      - cargo b --release --target ${BUILD_TARGET}
+      - echo "project builded"
+  copy:
+    description: Copies builded dll to a gmod server folder
+    commands:
+      - cp ./target/${BUILD_TARGET}/release/${BUILDED_FILE_NAME} ${SERVER_DIR}/garrysmod/lua/bin/gm${PACKAGE_SIDE}_${PACKAGE_NAME}_${BUILD_PLATFORM}.dll
+      - echo "builded file copied to lua/bin folder"
+  deploy:
+    description: Starts "CI/CD" process (build dll, copy dll, start server)
+    commands:
+      - puff build
+      - puff copy
+      # - puff kill_srcds
+      - puff start_srcds
+
+  # srcds controllers
+
+  kill_srcds:
+    commands:
+      - echo "todo - kill srcds"
+  start_srcds:
+    description: Starts Gmod DS
+    commands:
+      - echo "starting srcds"
+      - cd ${SERVER_DIR}; start ${SERVER_STARTER}
